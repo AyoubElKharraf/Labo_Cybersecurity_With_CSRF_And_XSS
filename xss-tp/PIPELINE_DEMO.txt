@@ -2,7 +2,6 @@
                     GUIDE ET PIPELINE DE DEMONSTRATION XSS
                De A a Z : Commandes, Ordre de passage et Payloads
 ================================================================================
-Auteur     : Ayoub (Master Ingenierie Informatique - Module Cybersecurite CEH)
 Projet     : Demonstration Pratique d'Attaques XSS et Mecanismes de Defense
 Cible      : Port 5000 (Application Web Flask)
 Attaquant  : Port 8888 (Serveur C2 d'Exfiltration de Cookies)
@@ -20,8 +19,8 @@ TABLE DES MATIERES :
 1. PREPARATION ET LANCEMENT
 ================================================================================
 
-Ouvrez un terminal PowerShell et placez-vous dans le dossier xss-tp :
-  cd "c:\Users\DELL\Documents\Master\Master_M2I\SEMESTRE 3\Cybersécurité CEH\TPs\Exposé - CSRF Attack\xss-tp"
+Ouvrez un terminal et placez-vous dans le dossier xss-tp :
+  cd "xss-tp"
 
 Lancer le scenario vulnerable :
   .\run_demo.bat vulnerable
@@ -78,10 +77,10 @@ Resultat a montrer :
 
 Concept pour l'audience :
   Un pirate ne fait pas de simples "alert()". Son but est de voler la session
-  active de l'administrateur ou d'un employe pour usurper son identite.
+  active pour usurper l'identite de l'utilisateur.
 
 Action :
-  1. D'abord, connectez-vous avec Ayoub sur http://127.0.0.1:5000/login (Ayoub / password123).
+  1. Connectez-vous sur http://127.0.0.1:5000/login (identifiants : user / password123).
   2. Allez sur http://127.0.0.1:5000/guestbook.
   3. Publiez ce message malveillant qui vole le cookie en arriere-plan :
      <script>
@@ -93,9 +92,9 @@ Resultat dans la console de l'attaquant (Port 8888) :
   - Regardez la fenetre noire de l'attaquant (Port 8888) :
   -----------------------------------------------------------------------------
   🚨 ALERTE SECURITE - COOKIE EXFILTRE PAR XSS !
-  [VOL REUSSI] Victime (127.0.0.1) -> Cookie : session=eyJ1c2VyIjoiQXlvdWIifQ...
+  [VOL REUSSI] Victime (127.0.0.1) -> Cookie : session=...
   -----------------------------------------------------------------------------
-  - L'attaquant dispose du cookie de session d'Ayoub et peut se connecter a sa place !
+  - L'attaquant dispose du cookie de session et peut se connecter a la place de la victime !
 
 
 ================================================================================
@@ -126,4 +125,3 @@ Defense 3 : Content-Security-Policy (CSP)
 ================================================================================
 FIN DU GUIDE XSS
 ================================================================================
-

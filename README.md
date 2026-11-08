@@ -1,9 +1,7 @@
-# 🛡️ Projet Académique : Sécurité Web Applicative (OWASP)
+# 🛡️ Projet Pédagogique : Sécurité Web Applicative (OWASP)
 ## Démonstrations Pratiques & Contre-Mesures : CSRF & XSS
 
-**Auteur :** Ayoub  
-**Formation :** Master 2 Ingénierie Informatique (M2I) - Semestre 3  
-**Module :** Module 4 - Cybersécurité CEH (*Certified Ethical Hacker*)  
+**Projet :** Laboratoire Pratique de Cybersécurité Web  
 **Environnement :** Python 3.10+, Flask, Vanilla JavaScript, Unittest  
 
 ---
@@ -28,7 +26,7 @@ Ce projet constitue une plateforme complète d'apprentissage et de démonstratio
    - Démonstration de la rupture du jeton anti-CSRF en présence d'une faille XSS.
    - Application concrète du principe de **Défense en Profondeur**.
 
-Tous les modules respectent des standards industriels : **zéro dépendance externe lourde** (stockage transparent en mémoire vive), **reproductibilité garantie**, **scripts universels Windows (`run_demo.bat`)**, et **suites de tests unitaires automatisées (100% de réussite)**.
+Tous les modules respectent des standards professionnels : **zéro dépendance externe lourde** (stockage transparent en mémoire vive), **reproductibilité garantie**, **scripts universels Windows (`run_demo.bat`)**, et **suites de tests unitaires automatisées (100% de réussite)**.
 
 ---
 
@@ -74,6 +72,15 @@ Exposé - CSRF & XSS/
 │   ├── requirements.txt            # Dépendances (Flask, requests)
 │   └── run_demo.bat                # Lanceur universel Windows (vulnerable | secure)
 │
+├── 📁 combo-csrf-xss/              # DÉMONSTRATION AVANCÉE : BYPASS DE CSRF TOKEN VIA XSS
+│   ├── app.py                      # Banque protégée par CSRF Token + Forum avec XSS Stocké
+│   ├── run_demo.bat                # Lanceur unifié (App port 5000 + Attaquant port 8081)
+│   ├── PIPELINE_DEMO.txt           # Scénario détaillé pour réussir la démo combinée
+│   ├── README.md                   # Explications de la chaîne d'exploitation et SOP
+│   └── 📁 attacker/
+│       ├── 1_csrf_fail.html        # Tentative CSRF directe (bloquée par le jeton CSRF, HTTP 403)
+│       └── 2_xss_payload.txt       # Payload XSS : vole le jeton dans le DOM et exécute le virement
+│
 └── README.md                       # Synthèse globale et guide d'orientation de l'exposé
 ```
 
@@ -94,7 +101,7 @@ Exposé - CSRF & XSS/
 * **Variantes démontrées (`xss-tp`)** :
   - **XSS Réfléchi (*Reflected*)** : Injection dans la barre de recherche (`/search?q=<script>...`) exécutée immédiatement chez la victime.
   - **XSS Stocké (*Stored / Persistant*)** : Injection persistante dans le livre d'or (`/guestbook`), infectant tout utilisateur consultant la page.
-* **Vol de session en temps réel** : Exfiltration de `document.cookie` vers le serveur pirate C2 (`http://127.0.0.1:8888`) capturant le secret d'Ayoub en direct.
+* **Vol de session en temps réel** : Exfiltration de `document.cookie` vers le serveur pirate C2 (`http://127.0.0.1:8888`) capturant le secret de session en direct.
 * **Contre-mesures** : Échappement HTML contextuel (Jinja2), drapeau **`HttpOnly=True`** (qui rend le cookie invisible en JS), et en-tête **`Content-Security-Policy: default-src 'self'`**.
 
 ---
@@ -124,7 +131,7 @@ Exposé - CSRF & XSS/
 ```cmd
 cd "csrf-tp\1_scenario_get_recrutement"
 .\run_demo.bat vulnerable   # Version vulnérable
-# Victime : http://localhost:5000 (Ayoub / password123)
+# Victime : http://localhost:5000 (identifiants : user / password123)
 # Piège   : http://localhost:8081/stage_recrutement.html
 .\run_demo.bat secure       # Défense : Interdiction du GET + Token CSRF
 ```
@@ -133,7 +140,7 @@ cd "csrf-tp\1_scenario_get_recrutement"
 ```cmd
 cd "..\2_scenario_img_forum"
 .\run_demo.bat vulnerable   # Version vulnérable (Débit au clic sur n'importe quelle photo)
-# Victime : http://localhost:5000 (Ayoub / password123)
+# Victime : http://localhost:5000 (identifiants : user / password123)
 # Piège   : http://localhost:8081/forum_photo.html
 .\run_demo.bat secure       # Défense : POST obligatoire + Jeton CSRF
 ```
@@ -154,6 +161,21 @@ cd "..\xss-tp"
 
 # Valider la suite de tests automatisés (5/5 tests validés) :
 python tests/test_xss.py
+```
+
+---
+
+### C. Démonstration Avancée : Chaîne d'Exploitation Combo CSRF + XSS (`combo-csrf-xss`)
+```cmd
+cd "..\combo-csrf-xss"
+
+# Démarrer le lab combiné (Serveur bancaire 5000 + Serveur pirate 8081) :
+.\run_demo.bat
+
+# Étape 1 : Connexion sur http://127.0.0.1:5000 (user / password123)
+# Étape 2 : Test de l'échec CSRF pur sur http://127.0.0.1:8081/1_csrf_fail.html -> 403 Forbidden
+# Étape 3 : Injection du script XSS dans le forum depuis attacker/2_xss_payload.txt
+# Résultat : Le script vole le jeton anti-CSRF dans le DOM et exécute le virement de 850 € avec succès !
 ```
 
 ---

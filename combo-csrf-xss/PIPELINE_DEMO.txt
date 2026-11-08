@@ -1,0 +1,101 @@
+===============================================================================
+PIPELINE DE DÉMONSTRATION : COMBO CSRF + XSS (CONTOURNEMENT DU JETON ANTI-CSRF)
+===============================================================================
+
+OBJECTIF PÉDAGOGIQUE POUR L'EXPOSÉ / COURS :
+Démontrer concrètement la notion de "Défense en Profondeur" :
+1. Une action critique (virement bancaire) est protégée contre le CSRF par un jeton secret (Synchronizer Token).
+2. L'attaquant échoue à exécuter un CSRF direct car il ne peut ni deviner ni lire le jeton depuis un domaine tiers (Same-Origin Policy).
+3. L'attaquant découvre une vulnérabilité XSS Stocké dans le forum de la plateforme.
+4. En injectant du JavaScript sur le domaine légitime, l'attaquant contourne la SOP : il lit le jeton anti-CSRF dans le DOM de la victime et soumet le virement avec succès !
+
+-------------------------------------------------------------------------------
+PRÉREQUIS
+-------------------------------------------------------------------------------
+- Python 3.8+
+- Flask installé (pip install flask)
+- Un navigateur Web moderne
+
+-------------------------------------------------------------------------------
+ÉTAPE 1 : LANCER LES SERVEURS
+-------------------------------------------------------------------------------
+1. Double-cliquez sur `run_demo.bat` (ou lancez manuellement) :
+   - Terminal 1 : python app.py
+     (Serveur cible sur http://127.0.0.1:5000)
+   - Terminal 2 : python -m http.server 8081 --directory attacker
+     (Serveur pirate sur http://127.0.0.1:8081)
+
+-------------------------------------------------------------------------------
+ÉTAPE 2 : CONNEXION EN TANT QUE VICTIME
+-------------------------------------------------------------------------------
+1. Ouvrez votre navigateur et allez sur :
+   http://127.0.0.1:5000
+2. Connectez-vous avec :
+   - Nom d'utilisateur : user
+   - Mot de passe      : password123
+3. Observez l'interface :
+   - Solde bancaire : 2500.00 €
+   - Dans le formulaire "Effectuer un virement sécurisé", il y a un champ caché :
+     <input type="hidden" name="csrf_token" id="csrf_token_input" value="...">
+   - L'espace de discussion / forum en bas.
+
+-------------------------------------------------------------------------------
+ÉTAPE 3 : TENTATIVE D'ATTAQUE CSRF PURE (ÉCHEC PRÉVU)
+-------------------------------------------------------------------------------
+1. Simulez l'arrivée de la victime sur un site piégé :
+   Ouvrez un nouvel onglet vers :
+   http://127.0.0.1:8081/1_csrf_fail.html
+2. Cliquez sur "Lancer l'attaque CSRF".
+3. RÉSULTAT OBTENU :
+   - Erreur HTTP 403 : "Erreur 403 : Jeton CSRF manquant ou invalide !"
+   - Retournez sur http://127.0.0.1:5000 : le solde est toujours intact (2500 €).
+4. EXPLICATION POUR LE PUBLIC :
+   - L'attaquant externe a pu envoyer la requête POST avec le cookie de session, MAIS il lui manquait le paramètre `csrf_token`.
+   - Sans le token secret, le serveur a rejeté la requête. La protection CSRF standard fonctionne parfaitement.
+
+-------------------------------------------------------------------------------
+ÉTAPE 4 : EXPLOITATION DU VECTEUR XSS STOCKÉ
+-------------------------------------------------------------------------------
+1. Ouvrez le fichier `attacker/2_xss_payload.txt` et copiez tout son contenu :
+   
+   <script>
+   (function() {
+       var tokenInput = document.getElementById("csrf_token_input");
+       var token = tokenInput ? tokenInput.value : null;
+       if (token) {
+           var payload = new URLSearchParams();
+           payload.append("dest", "Attaquant_Exploit_XSS");
+           payload.append("montant", "850");
+           payload.append("csrf_token", token);
+           fetch("/virement", {
+               method: "POST",
+               headers: { "Content-Type": "application/x-www-form-urlencoded" },
+               body: payload.toString()
+           }).then(function() {
+               setTimeout(function() { window.location.reload(); }, 1200);
+           });
+       }
+   })();
+   </script>
+
+2. Allez sur le forum de l'application légitime (http://127.0.0.1:5000).
+3. Dans la zone "Publier un message", collez ce script comme message.
+4. Cliquez sur "Publier le message".
+
+-------------------------------------------------------------------------------
+ÉTAPE 5 : RÉSULTAT ET COMPRÉHENSION DU BYPASS
+-------------------------------------------------------------------------------
+1. Dès que le message est enregistré, la page se recharge.
+2. Le script JavaScript s'exécute immédiatement dans le contexte de la victime légitime :
+   - Il accède à document.getElementById("csrf_token_input").value (possible car même origine !).
+   - Il déclenche un fetch POST vers `/virement` avec le jeton valide et le cookie de session.
+3. Observez l'écran :
+   - Le solde passe instantanément de 2500.00 € à 1650.00 € (-850 €) !
+   - La transaction apparaît dans l'historique : "Virement vers Attaquant_Exploit_XSS (-850.0 €)".
+
+-------------------------------------------------------------------------------
+SYNTHÈSE POUR LA CONCLUSION DE L'EXPOSÉ
+-------------------------------------------------------------------------------
+- Le CSRF token protège contre les requêtes inter-sites illégitimes.
+- Cependant, si une faille XSS est présente, elle détruit complètement la protection CSRF, car l'attaquant s'exécute DEPUIS le site légitime et a un accès total au DOM et aux requêtes internes.
+- Règle d'or : "La sécurité est un système global. Une seule faille XSS compromet toutes vos défenses CSRF !"

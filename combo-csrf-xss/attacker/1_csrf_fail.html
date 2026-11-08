@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Attaque CSRF Classique (Tentative)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1e1e2f;
+            color: #fff;
+            padding: 30px;
+            text-align: center;
+        }
+        .box {
+            background: #27293d;
+            border: 2px solid #e14eca;
+            border-radius: 10px;
+            max-width: 650px;
+            margin: auto;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        h1 { color: #e14eca; font-size: 24px; }
+        p { font-size: 15px; line-height: 1.6; color: #ccc; }
+        .code-box {
+            background: #1a1a27;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            text-align: left;
+            margin: 15px 0;
+            color: #ff8d72;
+            font-size: 13px;
+        }
+        button {
+            background: #e14eca;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover {
+            background: #ff6491;
+        }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h1>⚔️ Démonstration CSRF Seule (Échec Prévu)</h1>
+    <p>Cette page simule un site tiers pirate (hébergé par exemple sur le port <strong>8081</strong>).</p>
+    <p>Elle tente de forcer un virement bancaire de <strong>500 €</strong> vers le compte de l'attaquant sur l'application cible (port <strong>5000</strong>).</p>
+
+    <div class="code-box">
+        <strong>Requête forgée envoyée :</strong><br>
+        POST http://127.0.0.1:5000/virement<br>
+        Corps : dest=Hacker_Direct_CSRF&montant=500 (SANS jeton CSRF)
+    </div>
+
+    <!-- Formulaire d'attaque CSRF directe -->
+    <form id="csrfForm" action="http://127.0.0.1:5000/virement" method="POST">
+        <input type="hidden" name="dest" value="Hacker_Direct_CSRF">
+        <input type="hidden" name="montant" value="500">
+        <!-- Remarque : L'attaquant NE PEUT PAS deviner le jeton csrf_token stocké dans la session de la victime ! -->
+        <button type="submit">Lancer l'attaque CSRF (Cliquer ou auto-submit)</button>
+    </form>
+
+    <p style="margin-top: 20px; font-size: 13px; color: #a0aec0;">
+        🔍 <strong>Résultat attendu :</strong> L'application refusera la transaction avec une erreur 
+        <strong style="color: #ff6491;">403 Forbidden ("Jeton CSRF manquant ou invalide")</strong>. 
+        Le token anti-CSRF fait son travail !
+    </p>
+</div>
+
+</body>
+</html>

